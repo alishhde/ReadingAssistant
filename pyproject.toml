@@ -1,0 +1,96 @@
+[project]
+name = "Reading-Assistant"
+version = "0.1.0"
+description = "A RAG-based reading assistant with Gradio interface"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "accelerate>=1.5.2",
+    "arxiv>=2.1.3",
+    "bs4>=0.0.2",
+    "chromadb>=0.6.3",
+    "gradio>=5.23.1",
+    "huggingface-hub>=0.29.3",
+    "ipykernel>=6.29.5",
+    "ipywidgets>=8.1.5",
+    "langchain>=0.1.0",
+    "langchain-community>=0.3.20",
+    "langchain-core>=0.1.10",
+    "langchain-huggingface>=0.1.2",
+    "pymupdf>=1.25.4",
+    "pypdf>=5.4.0",
+    "torch>=2.6.0",
+    "transformers>=4.50.0",
+    "python-dotenv>=1.0.0",
+    "pydantic>=2.6.1",
+    "sentence-transformers>=2.5.1",
+    "langchain-openai>=0.3.9",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.12.0",
+    "black>=25.1.0",
+    "isort>=5.13.2",
+    "flake8>=7.1.2",
+    "flake8-docstrings>=1.7.0",
+    "mypy>=1.8.0",
+    "bandit>=1.7.7",
+    "safety>=2.3.5",
+    "detect-secrets>=1.5.0",
+    "pre-commit>=3.6.0",
+    "mkdocs>=1.5.3",
+    "mkdocs-material>=9.5.3",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.black]
+line-length = 120
+target-version = ['py311']
+include = '\.pyi?$'
+extend-exclude = '''
+# A regex preceded with ^/ will apply only to files and directories
+# in the root of the project.
+^/docs
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 120
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = "-ra -q"
+testpaths = [
+    "tests",
+]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
