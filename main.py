@@ -20,7 +20,8 @@ def main():
         'MODEL_TYPE': os.getenv('MODEL_TYPE'),
         'SERVER_NAME': os.getenv('SERVER_NAME'),
         'SERVER_PORT': int(os.getenv('SERVER_PORT')),
-        'AGENT_MODEL_LOADER': bool(os.getenv('AGENT_MODEL_LOADER').lower() == 'true')
+        'AGENT_MODEL_LOADER': bool(os.getenv('AGENT_MODEL_LOADER').lower() == 'true'),
+        'CHROMA_DATABASE_PATH': os.getenv('CHROMA_PATH')
     }
 
     # 2. Load the Configuration files

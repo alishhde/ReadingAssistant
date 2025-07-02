@@ -34,7 +34,8 @@ class Connector:
         self.muscles = Muscles(
             engine=self.engine,
             processor=self.processor,
-            embedding_model=variables['EMBEDDING_MODEL']
+            embedding_model=variables['EMBEDDING_MODEL'],
+            persist_directory=variables['CHROMA_DATABASE_PATH']
         )
         
         # Register as observer
@@ -43,6 +44,7 @@ class Connector:
         self.retriever_instance: Optional[Any] = None
         self._last_processed_question: Optional[str] = None
     
+
     def update(self, state: Any) -> None:
         """
         Handle state changes in backend.
@@ -67,7 +69,8 @@ class Connector:
                 logger.info(f"Created {len(chunks)} chunks")
 
                 # Step 3: Defining the vector database
-                vectordb = self.muscles.doc_vector_store(chunks)
+                file_path = self.state_manager.get_state().current_file
+                vectordb = self.muscles.doc_vector_store(chunks, file_path=file_path)
                 logger.info("Vector database created successfully!")
 
                 # Step 4: Defining a retriever instance
@@ -129,6 +132,7 @@ class Connector:
             logger.error(f"Error in file processing: {str(e)}")
             self.state_manager.set_error(str(e))
             
+
     def question_processor(self, state: Any) -> None:
         """
         Process the question and generate answer.

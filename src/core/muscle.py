@@ -10,7 +10,9 @@ from langchain_huggingface import HuggingFaceEmbeddings
 
 import logging
 from typing import List, Optional, Any
-
+import os
+import json
+import hashlib
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -21,7 +23,8 @@ class Muscles():
     def __init__(self, 
                  engine: Engine,
                  processor: Processor,
-                 embedding_model: str
+                 embedding_model: str,
+                 persist_directory: str
                  ) -> None:
         """
         Initialize the Muscles class with required components.
@@ -34,7 +37,7 @@ class Muscles():
         self.engine = engine
         self.processor = processor
         self.embedding_model = embedding_model
-
+        self.persist_directory = persist_directory
 
     def doc_loader(self, 
                   file: Any,
@@ -89,10 +92,48 @@ class Muscles():
         return chunks
     
 
+    def _get_file_hash(self, file_path: str) -> str:
+        """Compute a hash for the file to uniquely identify its content."""
+        hasher = hashlib.md5()
+        with open(file_path, 'rb') as f:
+            buf = f.read()
+            hasher.update(buf)
+        return hasher.hexdigest()
+
+
+    def _load_vectorized_files(self) -> set:
+        """Load the set of already vectorized file hashes."""
+        meta_path = os.path.join(self.persist_directory, "vectorized_files.json")
+        if os.path.exists(meta_path):
+            with open(meta_path, "r") as f:
+                return set(json.load(f))
+        return set()
+
+
+    def _save_vectorized_files(self, file_hashes: set) -> None:
+        """Save the set of vectorized file hashes."""
+        meta_path = os.path.join(self.persist_directory, "vectorized_files.json")
+        with open(meta_path, "w") as f:
+            json.dump(list(file_hashes), f)
+        
+
+    def save_vector_store(self, vector_store: Chroma) -> None:
+        """
+        Save the vector store to disk for persistence.
+        
+        Args:
+            vector_store: The Chroma vector store instance to save.
+        """
+        logger.info(f"Persisting vector store to {self.persist_directory} ...")
+        vector_store.persist()
+        logger.info("Vector store persisted successfully!")
+        
+
     def doc_vector_store(self, 
                         chunks: List[Any],
                         embedding_type: str = "huggingface",
                         vector_database_type: str = "chroma",
+                        file_path: str = None
                         ) -> Optional[Chroma]:
         """
         Create a vector database from the chunks and return the vector database.
@@ -101,24 +142,42 @@ class Muscles():
             chunks: List of document chunks
             embedding_type: Type of embedding model to use
             vector_database_type: Type of vector database to use
-            
+            file_path: Path to the file to vectorize
         Returns:
             Vector database instance or None if type is invalid
         """
-        # Step 1: Defining the embedding model
+        # Step 1: Check if file is already vectorized
+        file_hash = self._get_file_hash(file_path)
+        vectorized_files = self._load_vectorized_files()
+        if file_hash in vectorized_files:
+            logger.info(f"File '{file_path}' is already vectorized. Skipping vectorization.\n\n\n")
+            # Load the existing vector store
+            vector_store = Chroma(
+                persist_directory=self.persist_directory,
+                embedding_function=HuggingFaceEmbeddings(model_name=self.embedding_model)
+            )
+            return vector_store
+
+        # Step 2: Defining the embedding model
         if embedding_type == "huggingface": 
             logger.info("Initializing embedding model...")
             embeddings = HuggingFaceEmbeddings(model_name=self.embedding_model)
         else:
             logger.error("Invalid embedding type!")
             return None
-        
-        # Step 2: Creating the vector database
+            
+        # Step 3: Creating the vector database
         if vector_database_type == "chroma":
-            # Create a new vector store with the unique collection name
             logger.info("Creating vector database...")
-            vector_store = Chroma.from_documents(chunks, embeddings)
+            vector_store = Chroma.from_documents(
+                chunks, 
+                embeddings,
+                persist_directory=self.persist_directory
+                )
             logger.info("Vector database created successfully!")
+            self.save_vector_store(vector_store)
+            vectorized_files.add(file_hash)
+            self._save_vectorized_files(vectorized_files)
             return vector_store
         else:
             logger.error("Invalid vector database type!")
