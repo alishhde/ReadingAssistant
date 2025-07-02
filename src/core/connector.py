@@ -27,9 +27,9 @@ class Connector:
             local_model_name=env_vars['LOCAL_MODEL_NAME'],
             remote_model_name=env_vars['REMOTE_MODEL_NAME'],
             HF_TOKEN=env_vars['HF_TOKEN'],
-            running_locally=env_vars['RUNNING_LOCALLY'],
             openai_api_key=env_vars['OPENAI_API_KEY'],
-            model_type=env_vars['MODEL_TYPE']
+            model_type=env_vars['MODEL_TYPE'],
+            agent_model_loader=env_vars['AGENT_MODEL_LOADER']
         )
         self.processor = Processor()
         self.muscles = Muscles(
@@ -84,6 +84,8 @@ class Connector:
                 logger.info(self.state_manager.get_state().file_content[0].page_content[:500])
             else:
                 logger.warning("No documents content found!")
+        elif state.processing_status == ProcessingStatus.ERROR:
+            logger.error("An error occurred while processing the file!")
 
         # Handle question processing state
         if state.processing_question_status == ProcessingStatus.PROCESSING:
@@ -106,8 +108,6 @@ class Connector:
         elif state.processing_question_status == ProcessingStatus.ERROR:
             logger.error("An error occurred while processing the question!")
 
-        elif state.processing_status == ProcessingStatus.ERROR:
-            logger.error("An error occurred while processing the file!")
 
     def file_processor(self) -> None:
         """

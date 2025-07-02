@@ -16,11 +16,11 @@ def main():
         'LOCAL_MODEL_NAME': os.getenv('LOCAL_MODEL_NAME'),
         'REMOTE_MODEL_NAME': os.getenv('REMOTE_MODEL_NAME'),
         'EMBEDDING_MODEL': os.getenv('EMBEDDING_MODEL'),
-        'RUNNING_LOCALLY': os.getenv('RUNNING_LOCALLY').lower() == 'true',
         'OPENAI_API_KEY': os.getenv('OPENAI_API_KEY'),
         'MODEL_TYPE': os.getenv('MODEL_TYPE'),
         'SERVER_NAME': os.getenv('SERVER_NAME'),
-        'SERVER_PORT': int(os.getenv('SERVER_PORT'))
+        'SERVER_PORT': int(os.getenv('SERVER_PORT')),
+        'AGENT_MODEL_LOADER': bool(os.getenv('AGENT_MODEL_LOADER').lower() == 'true')
     }
     
     # Create the State Manager instance

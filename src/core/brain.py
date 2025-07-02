@@ -7,6 +7,9 @@ import os
 import logging
 from typing import Optional, Tuple
 
+from smolagents import OpenAIServerModel
+
+
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -35,9 +38,9 @@ class Engine:
                  local_model_name: Optional[str] = None, 
                  remote_model_name: Optional[str] = None,
                  HF_TOKEN: Optional[str] = None,
-                 running_locally: bool = False,
                  openai_api_key: Optional[str] = None,
-                 model_type: Optional[str] = None  
+                 model_type: Optional[str] = None,
+                 agent_model_loader: Optional[str] = None
                 ) -> None:
         """
         Initialize the Engine with specified model configuration.
@@ -46,7 +49,6 @@ class Engine:
             local_model_name: Name of the local HuggingFace model
             remote_model_name: Name of the remote HuggingFace model
             HF_TOKEN: HuggingFace API token
-            running_locally: Whether to run models locally
             openai_api_key: OpenAI API key
             model_type: Type of model to use ("openai", "huggingface", or "local")
         """
@@ -61,14 +63,21 @@ class Engine:
         
         try:
             if model_type == "openai":
-                logger.info("\nInitializing OpenAI model...")
-                if not self.openai_api_key:
-                    raise ValueError("OpenAI API key not provided. Set it via openai_api_key parameter.")
-                self.model = self.load_openai_model()
-                logger.info("OpenAI model loaded successfully!")
-                logger.info("Testing the model...")
-                print(self.sample_remote_generation())
-                logger.info("Model tested successfully!")
+                if agent_model_loader:
+                    logger.info("\nInitializing OpenAI model for Smolagent...")
+                    if not self.openai_api_key:
+                        raise ValueError("OpenAI API key not provided. Set it via openai_api_key parameter.")
+                    self.model = self.load_openai_model_smolagent()
+                    logger.info("OpenAI model for Smolagent loaded successfully!")
+                else:
+                    logger.info("\nInitializing OpenAI model...")
+                    if not self.openai_api_key:
+                        raise ValueError("OpenAI API key not provided. Set it via openai_api_key parameter.")
+                    self.model = self.load_openai_model()
+                    logger.info("OpenAI model loaded successfully!")
+                    logger.info("Testing the model...")
+                    print(self.sample_remote_generation())
+                    logger.info("Model tested successfully!")
                 
             elif model_type == "huggingface":
                 logger.info("\nInitializing HuggingFace endpoint model...")
@@ -90,6 +99,26 @@ class Engine:
             logger.error(f"Failed to initialize model: {str(e)}")
             raise
 
+
+    def load_openai_model_smolagent(self) -> ChatOpenAI:
+        """
+        Load and configure OpenAI model for Smolagent.
+        
+        Returns:
+            ChatOpenAI: Configured OpenAI model instance for Smolagent input
+        """
+        try:
+            config = self.DEFAULT_CONFIG["openai"]
+            model = OpenAIServerModel(
+                model_id=config["model_name"],
+                api_key=self.openai_api_key
+            )
+            return model
+        except Exception as e:
+            logger.error(f"Failed to load OpenAI model for Smolagent: {str(e)}")
+            raise
+
+
     def load_openai_model(self) -> ChatOpenAI:
         """
         Load and configure OpenAI model.
@@ -109,6 +138,7 @@ class Engine:
         except Exception as e:
             logger.error(f"Failed to load OpenAI model: {str(e)}")
             raise
+
 
     def load_endpoint_model(self) -> HuggingFaceEndpoint:
         """
@@ -135,6 +165,7 @@ class Engine:
             logger.error(f"Failed to load HuggingFace endpoint model: {str(e)}")
             raise
 
+
     def load_local_model(self) -> Tuple[AutoModelForCausalLM, AutoTokenizer]:
         """
         Load and configure local HuggingFace model.
@@ -155,6 +186,7 @@ class Engine:
         except Exception as e:
             logger.error(f"Failed to load local model: {str(e)}")
             raise
+
 
     def sample_remote_generation(self, 
                                prompt: str = "What is next to this sentence? ",
@@ -182,6 +214,7 @@ class Engine:
         except Exception as e:
             logger.error(f"Failed to generate text with remote model: {str(e)}")
             raise
+
 
     def sample_local_generation(self, 
                               prompt: str = "What is next to this sentence? ",
@@ -217,6 +250,7 @@ class Engine:
         except Exception as e:
             logger.error(f"Failed to generate text with local model: {str(e)}")
             raise
+
 
     def __del__(self):
         """Cleanup resources when the object is destroyed."""

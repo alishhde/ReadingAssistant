@@ -7,6 +7,8 @@ from typing import List, Optional, Any
 
 from src.core.brain import Engine
 from src.core.processor import Processor
+from src.core.agent_tools import PDFRetrieverTool
+from smolagents import CodeAgent, DuckDuckGoSearchTool
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -31,6 +33,7 @@ class Muscles():
         self.processor = processor
         self.embedding_model = embedding_model
 
+
     def doc_loader(self, 
                   file: Any,
                   type: str
@@ -46,6 +49,7 @@ class Muscles():
             The loaded document content
         """
         return self.processor.loader(file, type)
+
 
     def doc_splitter(self, 
                     document: List[Any],
@@ -82,6 +86,7 @@ class Muscles():
         logger.info(f"Created {len(chunks)} chunks")
         return chunks
     
+
     def doc_vector_store(self, 
                         chunks: List[Any],
                         embedding_type: str = "huggingface",
@@ -117,6 +122,7 @@ class Muscles():
             logger.error("Invalid vector database type!")
             return None
 
+
     def doc_retriever_instance(self, 
                              vector_store: Chroma,
                              ) -> Any:
@@ -131,7 +137,8 @@ class Muscles():
         """
         logger.info("Creating retriever instance...")
         retriever = vector_store.as_retriever(search_kwargs={"k": 4})
-        return retriever 
+        return retriever
+
 
     def doc_answer_retriever(self, 
                            retriever_instance: Any,
@@ -150,19 +157,14 @@ class Muscles():
         logger.info("=== Starting Question Processing ===")
         logger.info(f"Input Question: {query}")
 
-        qa_chain = RetrievalQA.from_chain_type(
-            llm=self.engine.model,
-            chain_type="stuff",
-            retriever=retriever_instance,
-            return_source_documents=False
-        )
-        logger.info("QA Chain created successfully. Invoking the chain on the question...")
-        
-        # Now get the actual response
-        response = qa_chain.invoke(query)
-        
-        logger.info("=== Final Response ===")
-        logger.info(f"Model's Answer: {response['result']}")
-        logger.info("=" * 50)
-            
-        return response['result']
+        # Create the tools' instances for agent
+        pdf_tool = PDFRetrieverTool(retriever_instance)
+        web_search_tool = DuckDuckGoSearchTool()
+
+        # Create the agent
+        agent = CodeAgent(tools=[pdf_tool, web_search_tool], model=self.engine.model, max_steps=3)
+
+        logger.info("Agent Created Successfully!")
+
+        response = agent.run(query)
+        return response
