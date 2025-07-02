@@ -8,7 +8,7 @@ import os
 import yaml
 
 
-load_dotenv()
+load_dotenv(override=True)
 
 
 def main():
@@ -16,7 +16,7 @@ def main():
     variables = {
         'EMBEDDING_MODEL': os.getenv('EMBEDDING_MODEL'),
         'OPENAI_API_KEY': os.getenv('OPENAI_API_KEY'),
-        'OPENAI_CONFIG_PATH': os.getenv('OPENAI_CONFIG_PATH'),
+        'CONFIG_PATH': os.getenv('CONFIG_PATH'),
         'MODEL_TYPE': os.getenv('MODEL_TYPE'),
         'SERVER_NAME': os.getenv('SERVER_NAME'),
         'SERVER_PORT': int(os.getenv('SERVER_PORT')),
@@ -24,11 +24,11 @@ def main():
     }
 
     # 2. Load the Configuration files
-    with open(variables['OPENAI_CONFIG_PATH'], 'r') as file:
-        openai_config = yaml.safe_load(file)
+    with open(variables['CONFIG_PATH'], 'r') as file:
+        config = yaml.safe_load(file)
     
     # 3. Updating the environment variables with the configuration file
-    variables['OPENAI_CONFIG'] = openai_config['OPENAI_CONFIG']
+    variables['CONFIG'] = config
     
     # 4. Create the State Manager instance
     state_manager = StateManager()

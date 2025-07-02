@@ -1,5 +1,5 @@
 from langchain_openai import ChatOpenAI
-from smolagents import OpenAIServerModel
+from smolagents import OpenAIServerModel, LiteLLMModel
 
 from typing import Optional, Tuple
 import logging
@@ -17,7 +17,7 @@ class Engine:
                  openai_api_key: Optional[str] = None,
                  model_type: Optional[str] = None,
                  agent_model_loader: Optional[str] = None,
-                 openai_config: Optional[dict] = None
+                 config: Optional[dict] = None
                 ) -> None:
         """
         Initialize the Engine with specified model configuration.
@@ -28,12 +28,12 @@ class Engine:
             agent_model_loader: Whether to load the model for Smolagent
             openai_config: Configuration for the OpenAI model
         """
-        if model_type not in ["openai"]:
+        if model_type not in ["openai", "ollama"]:
             raise ValueError(f"\nUnsupported model type: {model_type}")
             
         self.model_type = model_type
         self.openai_api_key = openai_api_key
-        self.openai_config = openai_config
+        self.config = config
         
         try:
             if model_type == "openai":
@@ -52,12 +52,38 @@ class Engine:
                     logger.info("Testing the model...")
                     print(self.sample_remote_generation())
                     logger.info("Model tested successfully!")
+            elif model_type == 'ollama':
+                if agent_model_loader:
+                    logger.info("\nInitializing Ollama model for Smolagent...")
+                    self.model = self.load_ollama_model_smolagent()
+                    logger.info("Ollama model for Smolagent loaded successfully!")
+                else:
+                    raise ValueError("Ollama simple model loader is not provided.")
             else:
                 raise ValueError(f"\nUnsupported model type: {self.model_type}")
-                
         except Exception as e:
             logger.error(f"Failed to initialize model: {str(e)}")
             raise
+
+
+    def load_ollama_model_smolagent(self) -> LiteLLMModel:
+        """
+        Load and configure Ollama model for Smolagent.
+        
+        Returns:
+            LiteLLMModel: Configured Ollama model instance for Smolagent input
+        """
+        try:
+            config = self.config['Ollama_CONFIG']
+            model = LiteLLMModel(
+                model_id=config["model_name"],
+                api_base=config["url"]
+            )
+            return model
+        except Exception as e:
+            logger.error(f"Failed to load Ollama model for Smolagent: {str(e)}")
+            raise
+
 
 
     def load_openai_model_smolagent(self) -> ChatOpenAI:
@@ -68,7 +94,7 @@ class Engine:
             ChatOpenAI: Configured OpenAI model instance for Smolagent input
         """
         try:
-            config = self.openai_config
+            config = self.config['OPENAI_CONFIG']
             model = OpenAIServerModel(
                 model_id=config["model_name"],
                 api_key=self.openai_api_key
@@ -87,7 +113,7 @@ class Engine:
             ChatOpenAI: Configured OpenAI model instance
         """
         try:
-            config = self.openai_config
+            config = self.config['OPENAI_CONFIG']
             model = ChatOpenAI(
                 openai_api_key=self.openai_api_key,
                 model_name=config["model_name"],

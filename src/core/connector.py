@@ -28,7 +28,7 @@ class Connector:
             openai_api_key=variables['OPENAI_API_KEY'],
             model_type=variables['MODEL_TYPE'],
             agent_model_loader=variables['AGENT_MODEL_LOADER'],
-            openai_config=variables['OPENAI_CONFIG']
+            config=variables['CONFIG']
         )
         self.processor = Processor()
         self.muscles = Muscles(

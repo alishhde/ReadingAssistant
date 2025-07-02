@@ -27,7 +27,7 @@ dependencies = [
     "langchain-openai>=0.3.9",
     "faiss-cpu>=1.11.0",
     "psycopg2-binary>=2.9.10",
-    "smolagents>=1.19.0",
+    "smolagents[litellm]>=1.19.0",
     "duckduckgo-search>=8.0.5",
 ]
 
