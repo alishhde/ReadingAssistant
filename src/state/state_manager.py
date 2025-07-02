@@ -1,5 +1,5 @@
 from typing import Optional, Any, List, Protocol
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 import logging
 
@@ -13,6 +13,7 @@ class ProcessingStatus(Enum):
     IDLE = "idle"
     PROCESSING = "processing"
     COMPLETED = "completed"
+    WORKING = "working"
     ERROR = "error"
 
 
@@ -29,16 +30,16 @@ class ApplicationState:
     Data class representing the application's state.
     
     Attributes:
-        current_file: Path to the currently processed file
-        file_content: Content of the processed file
+        current_files: List of paths to the currently processed files
+        file_contents: List of contents of the processed files
         processing_status: Current status of file processing
         processing_question_status: Current status of question processing
         error_message: Any error message from processing
         last_question: The most recent question asked
         last_answer: The most recent answer provided
     """
-    current_file: Optional[str] = None
-    file_content: Optional[Any] = None
+    current_files: list = field(default_factory=list)
+    file_contents: list = field(default_factory=list)
 
     processing_status: ProcessingStatus = ProcessingStatus.IDLE
     processing_question_status: ProcessingStatus = ProcessingStatus.IDLE
@@ -46,6 +47,14 @@ class ApplicationState:
 
     last_question: Optional[str] = None
     last_answer: Optional[str] = None
+
+    @property
+    def current_file(self):
+        return self.current_files[-1] if self.current_files else None
+
+    @property
+    def file_content(self):
+        return self.file_contents[-1] if self.file_contents else None
 
 
 class StateManager:
@@ -107,8 +116,11 @@ class StateManager:
             file_path: Path to the file being processed
         """
         logger.info(f"Updating current file to: {file_path}")
-        self.state.current_file = file_path
-        self.state.processing_status = ProcessingStatus.PROCESSING
+        self.state.current_files.append(file_path)
+        if len(self.state.current_files) == 1:
+            self.state.processing_status = ProcessingStatus.PROCESSING
+        else:
+            self.state.processing_status = ProcessingStatus.WORKING
         self.notify_observers()
     
     def update_file_content(self, content: Any) -> None:
@@ -119,7 +131,7 @@ class StateManager:
             content: Content of the processed file
         """
         logger.info("Updating file content")
-        self.state.file_content = content
+        self.state.file_contents.append(content)
         self.state.processing_status = ProcessingStatus.COMPLETED
         self.notify_observers()
     

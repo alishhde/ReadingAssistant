@@ -47,13 +47,22 @@ class Muscles():
         Load a document and return it.
         
         Args:
-            file: The document file to load
+            file: The document file to load (can be single file or list of files)
             type: Type of the document (e.g., 'pdf')
             
         Returns:
             The loaded document content
         """
-        return self.processor.loader(file, type)
+        # Handle multiple files
+        if isinstance(file, list):
+            all_documents = []
+            for single_file in file:
+                documents = self.processor.loader(single_file, type)
+                all_documents.extend(documents)
+            return all_documents
+        else:
+            # Handle single file
+            return list(self.processor.loader(file, type))
 
 
     def doc_splitter(self, 
@@ -169,11 +178,19 @@ class Muscles():
         # Step 3: Creating the vector database
         if vector_database_type == "chroma":
             logger.info("Creating vector database...")
-            vector_store = Chroma.from_documents(
-                chunks, 
-                embeddings,
-                persist_directory=self.persist_directory
+            # Load or create the vector store
+            if os.path.exists(os.path.join(self.persist_directory, "chroma.sqlite3")):
+                vector_store = Chroma(
+                    persist_directory=self.persist_directory,
+                    embedding_function=embeddings
                 )
+                vector_store.add_documents(chunks)  # Add new chunks to existing store
+            else:
+                vector_store = Chroma.from_documents(
+                    chunks, 
+                    embeddings,
+                    persist_directory=self.persist_directory
+                    )
             logger.info("Vector database created successfully!")
             self.save_vector_store(vector_store)
             vectorized_files.add(file_hash)

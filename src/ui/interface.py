@@ -75,6 +75,8 @@ class GradioApp:
             return "Processing document..."
         elif state.processing_status == ProcessingStatus.COMPLETED:
             return f"✅ Successfully loaded: {state.current_file.split('/')[-1]}"
+        elif state.processing_status == ProcessingStatus.WORKING:
+            return f"🟢 Ready for more files. You can ask questions about all uploaded documents. Last: {state.current_file.split('/')[-1]}"
         elif state.processing_status == ProcessingStatus.ERROR:
             return f"❌ Error: {state.error_message}"
 
@@ -87,22 +89,24 @@ class GradioApp:
 
         return ""
 
-    def process_file(self, file: Optional[Any]) -> str:
+    def process_file(self, files: Optional[Any]) -> str:
         """
         Process an uploaded file.
         
         Args:
-            file: The uploaded file object
+            files: The uploaded file objects
             
         Returns:
             Status message about the processing
         """
-        if not file:
+        if not files:
             return "No file uploaded"
+        if not isinstance(files, list):
+            files = [files]
         try:
-            logger.info(f"Processing file: {file}")
-            # Just update state, backend will handle processing
-            self.state_manager.update_file(file)
+            for file in files:
+                logger.info(f"Processing file: {file}")
+                self.state_manager.update_file(file)
             return self.update(self.state_manager.get_state())
         except Exception as e:
             logger.error(f"Error processing file: {str(e)}")
@@ -113,7 +117,7 @@ class GradioApp:
         """Create the file upload section of the interface."""
         file_input = gr.File(
             label="Upload your document",
-            file_count="single",
+            file_count="multiple",
             file_types=[".txt", ".pdf", ".doc", ".docx"],
             type="filepath"
         )
@@ -144,7 +148,6 @@ class GradioApp:
         try:
             logger.info(f"Processing question: {question}")
             self.state_manager.update_question(question)
-            # The actual answer will be updated by the backend
             return self.state_manager.get_state().last_answer or "Processing your question..."
         except Exception as e:
             logger.error(f"Error processing question: {str(e)}")

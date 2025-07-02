@@ -58,7 +58,7 @@ class Connector:
         logger.info(f"Last Processed Question: {self._last_processed_question}")
         
         # Handle file processing state
-        if state.processing_status == ProcessingStatus.PROCESSING:
+        if state.processing_status in [ProcessingStatus.PROCESSING, ProcessingStatus.WORKING]:
             try:
                 logger.info("=== Starting File Processing ===")
                 # Step 1: Process the file and get its content
