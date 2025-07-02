@@ -1,14 +1,16 @@
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import Chroma
-from langchain.chains import RetrievalQA
-from langchain_huggingface import HuggingFaceEmbeddings
-import logging
-from typing import List, Optional, Any
-
 from src.core.brain import Engine
 from src.core.processor import Processor
 from src.core.agent_tools import PDFRetrieverTool
 from smolagents import CodeAgent, DuckDuckGoSearchTool
+
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.vectorstores import Chroma
+from langchain.chains import RetrievalQA
+from langchain_huggingface import HuggingFaceEmbeddings
+
+import logging
+from typing import List, Optional, Any
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

@@ -1,9 +1,10 @@
-from typing import Dict, Any, Optional
-import logging
 from src.state.state_manager import ProcessingStatus, StateManager
 from src.core.muscle import Muscles
 from src.core.brain import Engine
 from src.core.processor import Processor
+
+from typing import Dict, Any, Optional
+import logging
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -12,30 +13,28 @@ logger = logging.getLogger(__name__)
 
 class Connector:
     def __init__(self, 
-                 env_vars: Dict[str, Any],
+                 variables: Dict[str, Any],
                  state_manager: StateManager
                  ) -> None:
         """
         Initialize the Connector class with required components.
         
         Args:
-            env_vars: Dictionary containing environment variables
+            variables: Dictionary containing environment variables
             state_manager: Instance of StateManager for state handling
         """
         self.state_manager = state_manager
         self.engine = Engine(
-            local_model_name=env_vars['LOCAL_MODEL_NAME'],
-            remote_model_name=env_vars['REMOTE_MODEL_NAME'],
-            HF_TOKEN=env_vars['HF_TOKEN'],
-            openai_api_key=env_vars['OPENAI_API_KEY'],
-            model_type=env_vars['MODEL_TYPE'],
-            agent_model_loader=env_vars['AGENT_MODEL_LOADER']
+            openai_api_key=variables['OPENAI_API_KEY'],
+            model_type=variables['MODEL_TYPE'],
+            agent_model_loader=variables['AGENT_MODEL_LOADER'],
+            openai_config=variables['OPENAI_CONFIG']
         )
         self.processor = Processor()
         self.muscles = Muscles(
             engine=self.engine,
             processor=self.processor,
-            embedding_model=env_vars['EMBEDDING_MODEL']
+            embedding_model=variables['EMBEDDING_MODEL']
         )
         
         # Register as observer

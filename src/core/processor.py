@@ -1,6 +1,6 @@
+from langchain_community.document_loaders import PyPDFLoader, ArxivLoader
 from typing import List, Any, Optional
 import logging
-from langchain_community.document_loaders import PyPDFLoader, ArxivLoader
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
