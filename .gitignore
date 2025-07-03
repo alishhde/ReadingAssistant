@@ -33,3 +33,6 @@ Data/
 !README.md
 *.ipynb
 tests/
+drafts/
+*.pdf
+*.zip

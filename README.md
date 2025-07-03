@@ -3,7 +3,7 @@
 A personal reading assistant powered by RAG (Retrieval-Augmented Generation) technology. Upload your PDF documents and interact with them using your preferred language model—OpenAI GPT or local Ollama models. Supports multi-file Q&A, persistent vector storage, and more.
 
 <div style="text-align: center; margin: 20px 0;">
-  <img src="assets/imgs/First Page.png" alt="Reading Assistant Interface" style="max-width: 85%; height: auto;">
+  <img src="assets/imgs/Workflow.jpg" alt="Reading Assistant Interface" style="max-width: 85%; height: auto;">
 </div>
 
 ## Features
