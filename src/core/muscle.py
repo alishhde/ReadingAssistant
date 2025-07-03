@@ -24,7 +24,8 @@ class Muscles():
                  engine: Engine,
                  processor: Processor,
                  embedding_model: str,
-                 persist_directory: str
+                 persist_directory: str,
+                 agent_max_steps: int
                  ) -> None:
         """
         Initialize the Muscles class with required components.
@@ -38,6 +39,8 @@ class Muscles():
         self.processor = processor
         self.embedding_model = embedding_model
         self.persist_directory = persist_directory
+        self.agent_max_steps = agent_max_steps
+
 
     def doc_loader(self, 
                   file: Any,
@@ -240,7 +243,7 @@ class Muscles():
         web_search_tool = DuckDuckGoSearchTool()
 
         # Create the agent
-        agent = CodeAgent(tools=[pdf_tool, web_search_tool], model=self.engine.model, max_steps=3)
+        agent = CodeAgent(tools=[pdf_tool, web_search_tool], model=self.engine.model, max_steps=self.agent_max_steps)
 
         logger.info("Agent Created Successfully!")
 

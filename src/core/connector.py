@@ -35,7 +35,8 @@ class Connector:
             engine=self.engine,
             processor=self.processor,
             embedding_model=variables['EMBEDDING_MODEL'],
-            persist_directory=variables['CHROMA_DATABASE_PATH']
+            persist_directory=variables['CHROMA_DATABASE_PATH'],
+            agent_max_steps=variables['AGENT_MAX_STEP']
         )
         
         # Register as observer

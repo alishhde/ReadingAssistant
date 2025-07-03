@@ -85,7 +85,6 @@ class Engine:
             raise
 
 
-
     def load_openai_model_smolagent(self) -> ChatOpenAI:
         """
         Load and configure OpenAI model for Smolagent.
